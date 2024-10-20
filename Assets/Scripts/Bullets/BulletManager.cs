@@ -98,19 +98,9 @@ namespace ShootEmUp
             if (damage <= 0)
                 return;
             
-            if (other.TryGetComponent(out Player player))
+            if (other.TryGetComponent(out IHealth health))
             {
-                if (bullet.isPlayer != player.isPlayer)
-                {
-                    if (player.health <= 0)
-                        return;
-
-                    player.health = Mathf.Max(0, player.health - damage);
-                    player.OnHealthChanged?.Invoke(player, player.health);
-
-                    if (player.health <= 0)
-                        player.OnHealthEmpty?.Invoke(player);
-                }
+                health.TakeDamage(damage);
             }
             else if (other.TryGetComponent(out Enemy enemy))
             {

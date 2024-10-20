@@ -5,22 +5,11 @@ namespace ShootEmUp
 {
     public sealed class Player : MonoBehaviour
     {
-        public Action<Player, int> OnHealthChanged;
-        public Action<Player> OnHealthEmpty;
+        [SerializeField] private HealthComponent _healthComponent;
 
-        [SerializeField]
-        public bool isPlayer;
-        
-        [SerializeField]
-        public Transform firePoint;
-        
-        [SerializeField]
-        public int health;
-
-        [SerializeField]
-        public Rigidbody2D _rigidbody;
-
-        [SerializeField]
-        public float speed = 5.0f;
+        public int GetHealth()
+        {
+            return _healthComponent.Health;
+        }
     }
 }

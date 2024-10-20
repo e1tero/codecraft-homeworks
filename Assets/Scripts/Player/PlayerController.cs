@@ -5,52 +5,69 @@ namespace ShootEmUp
     public sealed class PlayerController : MonoBehaviour
     {
         [SerializeField]
-        private Player character;
+        private PlayerMovement movementComponent;
 
         [SerializeField]
-        private BulletManager bulletManager;
+        private HealthComponent healthComponent;
 
-        private bool fireRequired;
-        private float moveDirection;
+        [SerializeField]
+        private PlayerShooter shooterComponent;
+
+        [SerializeField]
+        private InputHandlerComponent inputHandlerComponent;
+
+        private IMovable movement;
+        private IHealth health;
+        private IShooter shooter;
+        private IInputHandler inputHandler;
 
         private void Awake()
         {
-            this.character.OnHealthEmpty += _ => Time.timeScale = 0;
+            movement = movementComponent;
+            health = healthComponent;
+            shooter = shooterComponent;
+
+            if (inputHandlerComponent != null)
+            {
+                inputHandler = inputHandlerComponent.GetInputHandler();
+                inputHandler.OnFirePressed += HandleFire;
+            }
+
+            if (health != null)
+            {
+                health.OnHealthEmpty += HandleHealthEmpty;
+            }
         }
 
-        private void Update()
+        private void OnDestroy()
         {
-            if (Input.GetKeyDown(KeyCode.Space)) 
-                fireRequired = true;
+            if (inputHandler != null)
+            {
+                inputHandler.OnFirePressed -= HandleFire;
+            }
 
-            if (Input.GetKey(KeyCode.LeftArrow))
-                this.moveDirection = -1;
-            else if (Input.GetKey(KeyCode.RightArrow))
-                this.moveDirection = 1;
-            else
-                this.moveDirection = 0;
+            if (health != null)
+            {
+                health.OnHealthEmpty -= HandleHealthEmpty;
+            }
         }
 
         private void FixedUpdate()
         {
-            if (fireRequired)
-            {
-                bulletManager.SpawnBullet(
-                    this.character.firePoint.position,
-                    Color.blue,
-                    (int) PhysicsLayer.PLAYER_BULLET,
-                    1,
-                    true,
-                    this.character.firePoint.rotation * Vector3.up * 3
-                );
+            if (inputHandler == null) return;
 
-                fireRequired = false;
-            }
-            
-            Vector2 moveDirection = new Vector2(this.moveDirection, 0);
-            Vector2 moveStep = moveDirection * Time.fixedDeltaTime * character.speed;
-            Vector2 targetPosition = character._rigidbody.position + moveStep;
-            character._rigidbody.MovePosition(targetPosition);
+            float moveDirection = inputHandler.GetMoveDirection();
+            movement?.Move(moveDirection);
+        }
+
+        private void HandleFire()
+        {
+            shooter?.Shoot();
+        }
+
+        private void HandleHealthEmpty()
+        {
+            Time.timeScale = 0;
         }
     }
 }
